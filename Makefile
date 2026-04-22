@@ -1,4 +1,4 @@
-.PHONY: help build up up-logs down restart logs dev clean mysql redis migrate migrate-fresh prune backup restore ssh-prod
+.PHONY: help build up up-logs down restart logs dev dev-full clean mysql redis migrate migrate-fresh prune backup restore ssh-prod
 
 help:
 	@echo "Comandos disponíveis:"
@@ -9,6 +9,7 @@ help:
 	@echo "  make restart       - Reinicia os containers"
 	@echo "  make logs          - Exibe os logs dos containers"
 	@echo "  make dev           - Sobe MySQL + Redis e roda a API local (npm run dev)"
+	@echo "  make dev-full      - Sobe tudo (MySQL + Redis + API + Frontend)"
 	@echo "  make mysql         - Conecta no MySQL"
 	@echo "  make redis         - Conecta no Redis"
 	@echo "  make migrate       - Roda as migrations"
@@ -43,6 +44,15 @@ dev:
 	@until docker exec cca-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
 	@echo "MySQL pronto! Iniciando API..."
 	npm run dev
+
+dev-full:
+	docker compose up -d mysql redis
+	@echo "Aguardando MySQL ficar pronto..."
+	@until docker exec cca-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
+	@echo "MySQL pronto! Iniciando API em background..."
+	npm run dev &
+	@echo "Iniciando Frontend..."
+	cd ../portaria-front && npm run dev
 
 mysql:
 	docker exec -it cca-mysql mysql -uroot -pcca_dev_2024 cca
