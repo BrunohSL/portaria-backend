@@ -1,7 +1,8 @@
 const Condominium = require('../models/Condominium');
 const Unit = require('../models/Unit');
-const Resident = require('../models/Resident');
+const sequelize = require('../config/sequelize');
 const logger = require('../config/logger');
+const { bootstrapRootFlow } = require('./flowBootstrap');
 
 class CondominiumService {
   async list() {
@@ -14,7 +15,7 @@ class CondominiumService {
   async getById(id) {
     const condominium = await Condominium.findByPk(id, {
       include: [
-        { model: Unit, as: 'units', attributes: ['id', 'level1_value', 'level2_value', 'status'] }
+        { model: Unit, as: 'units', attributes: ['id', 'level1_value', 'level2_value'] }
       ]
     });
 
@@ -28,13 +29,22 @@ class CondominiumService {
   }
 
   async create(data, callerId) {
-    const condominium = await Condominium.create({
-      ...data,
-      created_by: callerId
-    });
+    const transaction = await sequelize.transaction();
+    try {
+      const condominium = await Condominium.create({
+        ...data,
+        created_by: callerId
+      }, { transaction });
 
-    logger.info({ msg: 'Condominio criado', condominiumId: condominium.id });
-    return condominium;
+      const rootFlow = await bootstrapRootFlow(condominium.id, { transaction });
+
+      await transaction.commit();
+      logger.info({ msg: 'Condominio criado', condominiumId: condominium.id, rootFlowId: rootFlow.id });
+      return condominium;
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
   }
 
   async update(id, data) {

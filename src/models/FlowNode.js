@@ -1,47 +1,43 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/sequelize');
 
-const FlowStep = sequelize.define('FlowStep', {
+const FlowNode = sequelize.define('FlowNode', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   flow_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'flows', key: 'id' }
   },
   condominium_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'condominiums', key: 'id' }
   },
-  step_order: {
-    type: DataTypes.INTEGER,
-    allowNull: false
-  },
   type: {
-    type: DataTypes.ENUM(
-      'GREETING',
-      'COLLECT_DATA',
-      'VALIDATE_RESIDENT',
-      'ASK_QUESTION',
-      'OPEN_GATE',
-      'TRANSFER_CALL',
-      'END_CALL'
-    ),
+    type: DataTypes.STRING,
     allowNull: false
   },
   config: {
     type: DataTypes.JSON,
     allowNull: true,
     defaultValue: {}
+  },
+  position_x: {
+    type: DataTypes.FLOAT,
+    allowNull: true
+  },
+  position_y: {
+    type: DataTypes.FLOAT,
+    allowNull: true
   }
 }, {
-  tableName: 'flow_steps',
+  tableName: 'flow_nodes',
   underscored: true,
   timestamps: true
 });
 
-module.exports = FlowStep;
+module.exports = FlowNode;

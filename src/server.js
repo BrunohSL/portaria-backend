@@ -17,6 +17,23 @@ const { jwt: jwtConfig } = require('./config/env');
 
 const server = http.createServer(app);
 
+// WebSocket server pro Twilio ConversationRelay (path-scoped pra não conflitar com Socket.IO)
+const { WebSocketServer } = require('ws');
+const conversationRelay = require('./integrations/twilio/conversationRelay');
+
+const conversationRelayWss = new WebSocketServer({ noServer: true });
+conversationRelayWss.on('connection', conversationRelay.handleConnection);
+
+server.on('upgrade', (request, socket, head) => {
+  const { pathname } = new URL(request.url, `http://${request.headers.host}`);
+  if (pathname === '/api/twilio/conversation-relay') {
+    conversationRelayWss.handleUpgrade(request, socket, head, (ws) => {
+      conversationRelayWss.emit('connection', ws, request);
+    });
+  }
+  // Outros paths: Socket.IO faz seu próprio upgrade handler internamente
+});
+
 const io = new Server(server, {
   cors: {
     origin: process.env.CORS_ORIGIN || '*',

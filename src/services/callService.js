@@ -2,7 +2,7 @@ const CallSession = require('../models/CallSession');
 const CallLog = require('../models/CallLog');
 const Condominium = require('../models/Condominium');
 const Flow = require('../models/Flow');
-const FlowStep = require('../models/FlowStep');
+const FlowNode = require('../models/FlowNode');
 const { Op } = require('sequelize');
 const logger = require('../config/logger');
 const { activeCalls, callsTotal, callDuration } = require('../config/metrics');
@@ -59,12 +59,12 @@ class CallService {
     return session;
   }
 
-  async addLog(sessionId, condominiumId, eventType, stepId, payload) {
+  async addLog(sessionId, condominiumId, eventType, nodeId, payload) {
     const log = await CallLog.create({
       call_session_id: sessionId,
       condominium_id: condominiumId,
       event_type: eventType,
-      step_id: stepId || null,
+      node_id: nodeId || null,
       payload: payload || null
     });
 
@@ -84,7 +84,7 @@ class CallService {
       where,
       include: [
         { model: Flow, as: 'flow', attributes: ['id', 'name', 'type'] },
-        { model: FlowStep, as: 'currentStep', attributes: ['id', 'type', 'step_order'] }
+        { model: FlowNode, as: 'currentNode', attributes: ['id', 'type'] }
       ],
       order: [['started_at', 'DESC']],
       limit: filters.limit || 50,
@@ -102,7 +102,7 @@ class CallService {
       where,
       include: [
         { model: Flow, as: 'flow' },
-        { model: FlowStep, as: 'currentStep' },
+        { model: FlowNode, as: 'currentNode' },
         { model: Condominium, as: 'condominium', attributes: ['id', 'name'] }
       ]
     });
@@ -123,7 +123,7 @@ class CallService {
     const logs = await CallLog.findAll({
       where,
       include: [
-        { model: FlowStep, as: 'step', attributes: ['id', 'type', 'step_order'] }
+        { model: FlowNode, as: 'node', attributes: ['id', 'type'] }
       ],
       order: [['created_at', 'ASC']]
     });

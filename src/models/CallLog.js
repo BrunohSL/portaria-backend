@@ -3,17 +3,17 @@ const sequelize = require('../config/sequelize');
 
 const CallLog = sequelize.define('CallLog', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   call_session_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'call_sessions', key: 'id' }
   },
   condominium_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'condominiums', key: 'id' }
   },
@@ -21,10 +21,10 @@ const CallLog = sequelize.define('CallLog', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  step_id: {
-    type: DataTypes.UUID,
+  node_id: {
+    type: DataTypes.INTEGER,
     allowNull: true,
-    references: { model: 'flow_steps', key: 'id' }
+    references: { model: 'flow_nodes', key: 'id' }
   },
   payload: {
     type: DataTypes.JSON,

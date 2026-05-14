@@ -12,7 +12,7 @@ module.exports = {
   database: {
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
-    name: process.env.DB_NAME || 'cca',
+    name: process.env.DB_NAME || 'portaria',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || 'root'
   },
@@ -27,11 +27,19 @@ module.exports = {
   },
   openai: {
     apiKey: process.env.OPENAI_API_KEY,
-    model: process.env.OPENAI_MODEL || 'gpt-4o'
+    // gpt-4o-mini: balanço ótimo de custo/qualidade pra classificação e extração.
+    // Override via env OPENAI_MODEL pra testar gpt-4o ou Claude/Gemini compatíveis.
+    model: process.env.OPENAI_MODEL || 'gpt-4o-mini'
   },
   elevenlabs: {
     apiKey: process.env.ELEVENLABS_API_KEY,
     voiceId: process.env.ELEVENLABS_VOICE_ID
   },
+  // URL pública (https) onde Twilio alcança nosso backend.
+  // Em dev: ngrok / cloudflared. Em prod: domínio.
+  publicBackendUrl: process.env.PUBLIC_BACKEND_URL,
+  // Quando true, o bot anuncia em voz "Iniciando <label do node>" antes de cada
+  // node — útil pra debug em chamadas de teste. Default false.
+  debugAnnounceNodes: process.env.DEBUG_ANNOUNCE_NODES === 'true',
   callQueueConcurrency: parseInt(process.env.CALL_QUEUE_CONCURRENCY) || 5
 };

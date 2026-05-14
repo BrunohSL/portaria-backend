@@ -90,7 +90,7 @@ function getResource(path) {
   if (path.includes('/users')) return 'USER';
   if (path.includes('/condominiums')) return 'CONDOMINIUM';
   if (path.includes('/units')) return 'UNIT';
-  if (path.includes('/residents')) return 'RESIDENT';
+  if (path.includes('/contacts')) return 'CONTACT';
   if (path.includes('/flows')) return 'FLOW';
   if (path.includes('/calls')) return 'CALL';
   if (path.includes('/auth')) return 'AUTH';

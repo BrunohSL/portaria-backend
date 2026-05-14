@@ -1,5 +1,6 @@
 const Unit = require('../models/Unit');
-const Resident = require('../models/Resident');
+const Contact = require('../models/Contact');
+const sequelize = require('../config/sequelize');
 const logger = require('../config/logger');
 
 class UnitService {
@@ -7,7 +8,7 @@ class UnitService {
     const units = await Unit.findAll({
       where: { condominium_id: condominiumId },
       include: [
-        { model: Resident, as: 'residents', attributes: ['id', 'name', 'type', 'active'] }
+        { model: Contact, as: 'contacts', attributes: ['id', 'name', 'type', 'active'] }
       ],
       order: [['level1_value', 'ASC'], ['level2_value', 'ASC']]
     });
@@ -18,7 +19,7 @@ class UnitService {
     const unit = await Unit.findOne({
       where: { id: unitId, condominium_id: condominiumId },
       include: [
-        { model: Resident, as: 'residents' }
+        { model: Contact, as: 'contacts' }
       ]
     });
 
@@ -83,9 +84,9 @@ class UnitService {
       throw error;
     }
 
-    const residentCount = await Resident.count({ where: { unit_id: unitId } });
-    if (residentCount > 0) {
-      const error = new Error('Nao e possivel excluir unidade com moradores vinculados');
+    const contactCount = await Contact.count({ where: { unit_id: unitId } });
+    if (contactCount > 0) {
+      const error = new Error('Nao e possivel excluir unidade com contatos vinculados');
       error.statusCode = 400;
       throw error;
     }
@@ -94,6 +95,74 @@ class UnitService {
 
     logger.info({ msg: 'Unidade excluida', unitId, condominiumId });
     return { message: 'Unidade excluida com sucesso' };
+  }
+
+  async batchUpdate(condominiumId, updates) {
+    const transaction = await sequelize.transaction();
+    try {
+      const results = [];
+      for (const item of updates) {
+        const unit = await Unit.findOne({
+          where: { id: item.id, condominium_id: condominiumId },
+          transaction
+        });
+        if (!unit) continue;
+
+        const data = {};
+        if (item.level1_value !== undefined) data.level1_value = item.level1_value;
+        if (item.level2_value !== undefined) data.level2_value = item.level2_value;
+
+        await unit.update(data, { transaction });
+        results.push(unit);
+      }
+      await transaction.commit();
+      logger.info({ msg: 'Unidades atualizadas em lote', count: results.length, condominiumId });
+      return results;
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+  }
+
+  async importCsv(condominiumId, rows) {
+    const transaction = await sequelize.transaction();
+    try {
+      const created = [];
+      const errors = [];
+
+      for (let i = 0; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row.level1_value || !row.level2_value) {
+          errors.push({ line: i + 2, reason: 'Campos obrigatorios vazios' });
+          continue;
+        }
+
+        const existing = await Unit.findOne({
+          where: { condominium_id: condominiumId, level1_value: row.level1_value, level2_value: row.level2_value },
+          transaction
+        });
+
+        if (existing) {
+          errors.push({ line: i + 2, reason: `Unidade ${row.level1_value}/${row.level2_value} ja existe` });
+          continue;
+        }
+
+        const unit = await Unit.create({
+          condominium_id: condominiumId,
+          level1_value: row.level1_value,
+          level2_value: row.level2_value
+        }, { transaction });
+
+        created.push(unit);
+      }
+
+      await transaction.commit();
+      logger.info({ msg: 'Import CSV concluido', created: created.length, errors: errors.length, condominiumId });
+      return { created: created.length, errors };
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
   }
 }
 

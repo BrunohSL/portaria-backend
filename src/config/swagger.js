@@ -4,11 +4,11 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Condominium Call API',
+      title: 'Portaria API',
       version: '1.0.0',
       description: 'API de atendimento automatizado para condominios via ligacao telefonica',
       contact: {
-        name: 'Equipe CCA'
+        name: 'Equipe Portaria'
       }
     },
     servers: [
@@ -47,7 +47,7 @@ const options = {
       { name: 'Auth', description: 'Autenticacao e gerenciamento de sessao' },
       { name: 'Condominiums', description: 'Gerenciamento de condominios' },
       { name: 'Units', description: 'Gerenciamento de unidades' },
-      { name: 'Residents', description: 'Gerenciamento de moradores' },
+      { name: 'Contacts', description: 'Gerenciamento de contatos' },
       { name: 'Flows', description: 'Gerenciamento de fluxos de atendimento' },
       { name: 'Calls', description: 'Sessoes de chamadas' },
       { name: 'Audit', description: 'Logs de auditoria' }

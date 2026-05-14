@@ -3,12 +3,12 @@ const sequelize = require('../config/sequelize');
 
 const AuditLog = sequelize.define('AuditLog', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   user_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: true
   },
   action: {
@@ -20,7 +20,7 @@ const AuditLog = sequelize.define('AuditLog', {
     allowNull: false
   },
   resource_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: true
   },
   method: {

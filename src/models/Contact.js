@@ -1,19 +1,19 @@
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/sequelize');
 
-const Resident = sequelize.define('Resident', {
+const Contact = sequelize.define('Contact', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   condominium_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'condominiums', key: 'id' }
   },
   unit_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: true,
     references: { model: 'units', key: 'id' }
   },
@@ -38,8 +38,8 @@ const Resident = sequelize.define('Resident', {
     allowNull: true
   },
   type: {
-    type: DataTypes.ENUM('owner', 'tenant', 'dependent'),
-    defaultValue: 'owner'
+    type: DataTypes.ENUM('owner', 'resident', 'visitor'),
+    defaultValue: 'resident'
   },
   active: {
     type: DataTypes.BOOLEAN,
@@ -54,9 +54,9 @@ const Resident = sequelize.define('Resident', {
     allowNull: true
   }
 }, {
-  tableName: 'residents',
+  tableName: 'contacts',
   underscored: true,
   timestamps: true
 });
 
-module.exports = Resident;
+module.exports = Contact;

@@ -1,20 +1,20 @@
 version: "3.8"
 
 services:
-  cca-mysql:
+  portaria-mysql:
     image: mysql:8.0.42
     networks:
       - 6LabNet
     environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/cca_db_root_password
-      - MYSQL_DATABASE=cca
-      - MYSQL_USER=cca
-      - MYSQL_PASSWORD_FILE=/run/secrets/cca_db_password
+      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/portaria_db_root_password
+      - MYSQL_DATABASE=portaria
+      - MYSQL_USER=portaria
+      - MYSQL_PASSWORD_FILE=/run/secrets/portaria_db_password
     volumes:
-      - cca_mysql_data:/var/lib/mysql
+      - portaria_mysql_data:/var/lib/mysql
     secrets:
-      - cca_db_root_password
-      - cca_db_password
+      - portaria_db_root_password
+      - portaria_db_password
     command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     deploy:
       replicas: 1
@@ -36,7 +36,7 @@ services:
       retries: 10
       start_period: 30s
 
-  cca-redis:
+  portaria-redis:
     image: redis:7-alpine
     networks:
       - 6LabNet
@@ -56,29 +56,29 @@ services:
       timeout: 3s
       retries: 5
 
-  cca-api:
-    image: cca-api:latest
+  portaria-api:
+    image: portaria-api:latest
     networks:
       - 6LabNet
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DB_HOST=cca-api_cca-mysql
+      - DB_HOST=portaria-api_portaria-mysql
       - DB_PORT=3306
-      - DB_NAME=cca
-      - DB_USER=cca
-      - REDIS_URL=redis://cca-api_cca-redis:6379
+      - DB_NAME=portaria
+      - DB_USER=portaria
+      - REDIS_URL=redis://portaria-api_portaria-redis:6379
       - JWT_EXPIRES_IN=24h
       - CORS_ORIGIN=https://portaria.6lab.com.br
       - TZ=America/Sao_Paulo
     secrets:
-      - cca_db_password
-      - cca_jwt_secret
-      - cca_encryption_key
-      - cca_metrics_token
-      - cca_twilio_auth_token
-      - cca_openai_api_key
-      - cca_elevenlabs_api_key
+      - portaria_db_password
+      - portaria_jwt_secret
+      - portaria_encryption_key
+      - portaria_metrics_token
+      - portaria_twilio_auth_token
+      - portaria_openai_api_key
+      - portaria_elevenlabs_api_key
     deploy:
       replicas: 1
       resources:
@@ -87,10 +87,10 @@ services:
           cpus: "0.50"
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.cca-api.rule=Host(`portaria-api.6lab.com.br`)"
-        - "traefik.http.routers.cca-api.entrypoints=websecure"
-        - "traefik.http.routers.cca-api.tls.certresolver=letsencryptresolver"
-        - "traefik.http.services.cca-api.loadbalancer.server.port=3000"
+        - "traefik.http.routers.portaria-api.rule=Host(`portaria-api.6lab.com.br`)"
+        - "traefik.http.routers.portaria-api.entrypoints=websecure"
+        - "traefik.http.routers.portaria-api.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.portaria-api.loadbalancer.server.port=3000"
       update_config:
         parallelism: 1
         delay: 10s
@@ -105,7 +105,7 @@ services:
     networks:
       - 6LabNet
     environment:
-      - ADMINER_DEFAULT_SERVER=cca-api_cca-mysql
+      - ADMINER_DEFAULT_SERVER=portaria-api_portaria-mysql
       - ADMINER_DESIGN=dracula
     deploy:
       replicas: 0
@@ -115,17 +115,17 @@ services:
           cpus: "0.25"
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.cca-adminer.rule=Host(`cca-adminer.6lab.com.br`)"
-        - "traefik.http.routers.cca-adminer.entrypoints=websecure"
-        - "traefik.http.routers.cca-adminer.tls.certresolver=letsencryptresolver"
-        - "traefik.http.services.cca-adminer.loadbalancer.server.port=8080"
+        - "traefik.http.routers.portaria-adminer.rule=Host(`portaria-adminer.6lab.com.br`)"
+        - "traefik.http.routers.portaria-adminer.entrypoints=websecure"
+        - "traefik.http.routers.portaria-adminer.tls.certresolver=letsencryptresolver"
+        - "traefik.http.services.portaria-adminer.loadbalancer.server.port=8080"
       restart_policy:
         condition: on-failure
         delay: 5s
         max_attempts: 3
 
 volumes:
-  cca_mysql_data:
+  portaria_mysql_data:
     driver: local
 
 networks:
@@ -133,19 +133,19 @@ networks:
     external: true
 
 secrets:
-  cca_db_password:
+  portaria_db_password:
     external: true
-  cca_db_root_password:
+  portaria_db_root_password:
     external: true
-  cca_jwt_secret:
+  portaria_jwt_secret:
     external: true
-  cca_encryption_key:
+  portaria_encryption_key:
     external: true
-  cca_metrics_token:
+  portaria_metrics_token:
     external: true
-  cca_twilio_auth_token:
+  portaria_twilio_auth_token:
     external: true
-  cca_openai_api_key:
+  portaria_openai_api_key:
     external: true
-  cca_elevenlabs_api_key:
+  portaria_elevenlabs_api_key:
     external: true

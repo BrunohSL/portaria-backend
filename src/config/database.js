@@ -1,8 +1,10 @@
+require('dotenv').config();
+
 module.exports = {
   development: {
     username: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root',
-    database: process.env.DB_NAME || 'cca',
+    password: process.env.DB_PASSWORD || 'portaria_dev_2026',
+    database: process.env.DB_NAME || 'portaria',
     host: process.env.DB_HOST || 'localhost',
     port: process.env.DB_PORT || 3306,
     dialect: 'mysql',

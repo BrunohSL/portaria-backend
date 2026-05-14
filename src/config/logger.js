@@ -20,6 +20,28 @@ function redact(obj) {
   return clean;
 }
 
+// Formatter de dev: surface `msg` (convenção do projeto) + meta inline.
+// Quando logger.info({msg, ...}) é chamado com objeto puro, o winston empacota
+// o objeto inteiro em `info.message`. Aqui desempacotamos pra exibir bonito.
+const devPretty = winston.format.printf((info) => {
+  const { level, timestamp, message, service, stack, ...rest } = info;
+
+  let head = '';
+  let meta = { ...rest };
+  if (message && typeof message === 'object') {
+    const { msg, ...others } = message;
+    head = msg || '';
+    meta = { ...others, ...rest };
+  } else {
+    head = message || '';
+  }
+
+  const metaKeys = Object.keys(meta);
+  const metaStr = metaKeys.length ? ' ' + JSON.stringify(meta) : '';
+  const tail = stack ? `\n${stack}` : '';
+  return `${timestamp} ${level}: ${head}${metaStr}${tail}`;
+});
+
 const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   format: winston.format.combine(
@@ -27,14 +49,16 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     winston.format.json()
   ),
-  defaultMeta: { service: 'cca-api' },
+  defaultMeta: { service: 'portaria-api' },
   transports: [
     new winston.transports.Console({
       format: process.env.NODE_ENV === 'production'
         ? winston.format.json()
         : winston.format.combine(
+            winston.format.timestamp(),
+            winston.format.errors({ stack: true }),
             winston.format.colorize(),
-            winston.format.simple()
+            devPretty
           )
     })
   ]

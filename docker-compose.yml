@@ -3,11 +3,11 @@ version: '3.8'
 services:
   mysql:
     image: mysql:8.0
-    container_name: cca-mysql
+    container_name: portaria-mysql
     network_mode: "host"
     environment:
-      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-cca_dev_2024}
-      - MYSQL_DATABASE=cca
+      - MYSQL_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-portaria_dev_2026}
+      - MYSQL_DATABASE=portaria
     volumes:
       - mysql_data:/var/lib/mysql
     restart: unless-stopped
@@ -19,7 +19,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: cca-redis
+    container_name: portaria-redis
     network_mode: "host"
     restart: unless-stopped
     healthcheck:
@@ -30,15 +30,15 @@ services:
 
   api:
     build: .
-    container_name: cca-api
+    container_name: portaria-api
     network_mode: "host"
     environment:
       - PORT=3000
       - DB_HOST=localhost
       - DB_PORT=3306
-      - DB_NAME=cca
+      - DB_NAME=portaria
       - DB_USER=root
-      - DB_PASSWORD=${DB_ROOT_PASSWORD:-cca_dev_2024}
+      - DB_PASSWORD=${DB_ROOT_PASSWORD:-portaria_dev_2026}
       - REDIS_URL=redis://localhost:6379
       - CORS_ORIGIN=http://localhost:3001
       - TZ=America/Sao_Paulo

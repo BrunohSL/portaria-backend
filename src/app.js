@@ -159,7 +159,7 @@ app.get('/metrics', async (req, res) => {
 // Swagger docs
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'CCA API Docs'
+  customSiteTitle: 'Portaria API Docs'
 }));
 
 // Bull Board
@@ -181,10 +181,22 @@ if (process.env.NODE_ENV === 'production') {
 }
 
 // Rotas da aplicacao
+const userRoutes = require('./routes/userRoutes');
+const devRoutes = require('./routes/devRoutes');
+const employeeRoleRoutes = require('./routes/employeeRoleRoutes');
+const visitorDataFieldRoutes = require('./routes/visitorDataFieldRoutes');
+const catalogRoutes = require('./routes/catalogRoutes');
+const twilioRoutes = require('./routes/twilioRoutes');
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 app.use('/api/condominiums', condominiumRoutes);
 app.use('/api/calls', callRoutes);
 app.use('/api/audit', auditRoutes);
+app.use('/api/dev', devRoutes);
+app.use('/api/employee-roles', employeeRoleRoutes);
+app.use('/api/visitor-data-fields', visitorDataFieldRoutes);
+app.use('/api/catalogs', catalogRoutes);
+app.use('/api/twilio', twilioRoutes);
 
 // 404
 app.use((req, res) => {

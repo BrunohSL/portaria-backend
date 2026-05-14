@@ -3,8 +3,8 @@ const sequelize = require('../config/sequelize');
 
 const ProcessedEvent = sequelize.define('ProcessedEvent', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   external_id: {

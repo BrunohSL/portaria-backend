@@ -3,12 +3,12 @@ const sequelize = require('../config/sequelize');
 
 const Flow = sequelize.define('Flow', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   condominium_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'condominiums', key: 'id' }
   },
@@ -23,6 +23,11 @@ const Flow = sequelize.define('Flow', {
   active: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  entry_node_id: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: 'flow_nodes', key: 'id' }
   }
 }, {
   tableName: 'flows',

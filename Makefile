@@ -41,35 +41,35 @@ logs:
 dev:
 	docker compose up -d mysql redis
 	@echo "Aguardando MySQL ficar pronto..."
-	@until docker exec cca-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
+	@until docker exec portaria-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
 	@echo "MySQL pronto! Iniciando API..."
 	npm run dev
 
 dev-full:
 	docker compose up -d mysql redis
 	@echo "Aguardando MySQL ficar pronto..."
-	@until docker exec cca-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
+	@until docker exec portaria-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
 	@echo "MySQL pronto! Iniciando API em background..."
 	npm run dev &
 	@echo "Iniciando Frontend..."
 	cd ../portaria-front && npm run dev
 
 mysql:
-	docker exec -it cca-mysql mysql -uroot -pcca_dev_2024 cca
+	docker exec -it portaria-mysql mysql -uroot -pportaria_dev_2026 portaria
 
 redis:
-	docker exec -it cca-redis redis-cli
+	docker exec -it portaria-redis redis-cli
 
 migrate:
 	npm run migrate
 
 migrate-fresh:
-	docker exec -i cca-mysql mysql -uroot -pcca_dev_2024 -e "DROP DATABASE IF EXISTS cca; CREATE DATABASE cca CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+	docker exec -i portaria-mysql mysql -uroot -pportaria_dev_2026 -e "DROP DATABASE IF EXISTS portaria; CREATE DATABASE portaria CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 	npm run migrate
 
 backup:
 	@echo "Fazendo backup do banco de dados..."
-	docker exec cca-mysql mysqldump -uroot -pcca_dev_2024 cca > backup_$(shell date +%Y%m%d_%H%M%S).sql
+	docker exec portaria-mysql mysqldump -uroot -pportaria_dev_2026 portaria > backup_$(shell date +%Y%m%d_%H%M%S).sql
 	@echo "Backup criado com sucesso!"
 
 restore:
@@ -77,7 +77,7 @@ restore:
 	@if [ -z "$(file)" ]; then \
 		echo "Uso: make restore file=backup_20240101_120000.sql"; \
 	else \
-		docker exec -i cca-mysql mysql -uroot -pcca_dev_2024 cca < $(file); \
+		docker exec -i portaria-mysql mysql -uroot -pportaria_dev_2026 portaria < $(file); \
 		echo "Backup restaurado com sucesso!"; \
 	fi
 

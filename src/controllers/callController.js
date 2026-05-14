@@ -1,49 +1,15 @@
 const callService = require('../services/callService');
-const Condominium = require('../models/Condominium');
-const { callQueue } = require('../config/queue');
 const logger = require('../config/logger');
 
 class CallController {
-  // Webhook Twilio — sem auth JWT
-  async incomingWebhook(req, res) {
-    try {
-      const { From: callerNumber, CallSid: callSid, To: toNumber } = req.body;
-
-      // Identificar condominio pelo numero Twilio
-      const condominium = await Condominium.findOne({
-        where: { twilio_phone_number: toNumber, active: true }
-      });
-
-      if (!condominium) {
-        logger.warn({ msg: 'Chamada para numero nao vinculado', toNumber, callerNumber });
-        return res.type('text/xml').send(
-          '<?xml version="1.0" encoding="UTF-8"?><Response><Say language="pt-BR">Numero nao configurado.</Say><Hangup/></Response>'
-        );
-      }
-
-      // Criar sessao e enfileirar
-      const session = await callService.createSession(condominium.id, {
-        caller_number: callerNumber,
-        twilio_call_sid: callSid
-      });
-
-      await callQueue.add({
-        sessionId: session.id,
-        condominiumId: condominium.id,
-        callerNumber,
-        callSid
-      });
-
-      // Resposta inicial TwiML
-      res.type('text/xml').send(
-        '<?xml version="1.0" encoding="UTF-8"?><Response><Say language="pt-BR">Aguarde um momento, estamos processando sua chamada.</Say><Pause length="2"/></Response>'
-      );
-    } catch (error) {
-      logger.error({ msg: 'Erro no webhook de chamada', error: error.message });
-      res.type('text/xml').send(
-        '<?xml version="1.0" encoding="UTF-8"?><Response><Say language="pt-BR">Desculpe, ocorreu um erro. Tente novamente mais tarde.</Say><Hangup/></Response>'
-      );
-    }
+  // LEGADO: webhook do modelo antigo (Twilio direto → este backend).
+  // A arquitetura atual roteia: Twilio → ElevenLabs → endpoint Custom LLM nosso.
+  // Esse endpoint não é mais usado. Mantido como stub pra não quebrar quem ainda chamar.
+  async incomingWebhook(_req, res) {
+    logger.warn({ msg: 'Webhook legado /webhook/incoming chamado — roteamento agora é via ElevenLabs Custom LLM' });
+    res.status(410).type('text/xml').send(
+      '<?xml version="1.0" encoding="UTF-8"?><Response><Say language="pt-BR">Atendimento temporariamente indisponível.</Say><Hangup/></Response>'
+    );
   }
 
   async listSessions(req, res) {

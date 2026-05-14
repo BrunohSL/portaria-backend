@@ -3,12 +3,12 @@ const sequelize = require('../config/sequelize');
 
 const Unit = sequelize.define('Unit', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   condominium_id: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: false,
     references: { model: 'condominiums', key: 'id' }
   },
@@ -19,10 +19,6 @@ const Unit = sequelize.define('Unit', {
   level2_value: {
     type: DataTypes.STRING,
     allowNull: false
-  },
-  status: {
-    type: DataTypes.ENUM('occupied', 'vacant'),
-    defaultValue: 'vacant'
   }
 }, {
   tableName: 'units',

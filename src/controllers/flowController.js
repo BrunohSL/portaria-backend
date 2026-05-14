@@ -1,95 +1,67 @@
 const flowService = require('../services/flowService');
 
+function handle(promise, res, successStatus = 200) {
+  return promise
+    .then((data) => res.status(successStatus).json({ success: true, data }))
+    .catch((error) => {
+      const status = error.statusCode || 500;
+      res.status(status).json({ success: false, error: error.message });
+    });
+}
+
 class FlowController {
-  async list(req, res) {
-    try {
-      const flows = await flowService.list(req.params.id);
-      res.json({ success: true, data: flows });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  list(req, res) {
+    return handle(flowService.list(req.params.id), res);
   }
 
-  async getById(req, res) {
-    try {
-      const flow = await flowService.getById(req.params.id, req.params.flowId);
-      res.json({ success: true, data: flow });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  getById(req, res) {
+    return handle(flowService.getById(req.params.id, req.params.flowId), res);
   }
 
-  async create(req, res) {
-    try {
-      const flow = await flowService.create(req.params.id, req.body);
-      res.status(201).json({ success: true, data: flow });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  create(req, res) {
+    return handle(flowService.create(req.params.id, req.body), res, 201);
   }
 
-  async update(req, res) {
-    try {
-      const flow = await flowService.update(req.params.id, req.params.flowId, req.body);
-      res.json({ success: true, data: flow });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  update(req, res) {
+    return handle(flowService.update(req.params.id, req.params.flowId, req.body), res);
   }
 
-  async delete(req, res) {
-    try {
-      const result = await flowService.delete(req.params.id, req.params.flowId);
-      res.json({ success: true, data: result });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  delete(req, res) {
+    return handle(flowService.delete(req.params.id, req.params.flowId), res);
   }
 
-  // Steps
-  async listSteps(req, res) {
-    try {
-      const steps = await flowService.listSteps(req.params.id, req.params.flowId);
-      res.json({ success: true, data: steps });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  validate(req, res) {
+    return handle(flowService.validate(req.params.id, req.params.flowId), res);
   }
 
-  async createStep(req, res) {
-    try {
-      const step = await flowService.createStep(req.params.id, req.params.flowId, req.body);
-      res.status(201).json({ success: true, data: step });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  setEntryNode(req, res) {
+    return handle(flowService.setEntryNode(req.params.id, req.params.flowId, req.body.nodeId), res);
   }
 
-  async updateStep(req, res) {
-    try {
-      const step = await flowService.updateStep(req.params.id, req.params.flowId, req.params.stepId, req.body);
-      res.json({ success: true, data: step });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  // Nodes
+  listNodes(req, res) {
+    return handle(flowService.listNodes(req.params.id, req.params.flowId), res);
   }
 
-  async deleteStep(req, res) {
-    try {
-      const result = await flowService.deleteStep(req.params.id, req.params.flowId, req.params.stepId);
-      res.json({ success: true, data: result });
-    } catch (error) {
-      const status = error.statusCode || 500;
-      res.status(status).json({ success: false, error: error.message });
-    }
+  createNode(req, res) {
+    return handle(flowService.createNode(req.params.id, req.params.flowId, req.body), res, 201);
+  }
+
+  updateNode(req, res) {
+    return handle(flowService.updateNode(req.params.id, req.params.flowId, req.params.nodeId, req.body), res);
+  }
+
+  deleteNode(req, res) {
+    return handle(flowService.deleteNode(req.params.id, req.params.flowId, req.params.nodeId), res);
+  }
+
+  // Edges
+  createEdge(req, res) {
+    return handle(flowService.createEdge(req.params.id, req.params.flowId, req.body), res, 201);
+  }
+
+  deleteEdge(req, res) {
+    return handle(flowService.deleteEdge(req.params.id, req.params.flowId, req.params.edgeId), res);
   }
 }
 
@@ -100,8 +72,12 @@ module.exports = {
   create: controller.create.bind(controller),
   update: controller.update.bind(controller),
   delete: controller.delete.bind(controller),
-  listSteps: controller.listSteps.bind(controller),
-  createStep: controller.createStep.bind(controller),
-  updateStep: controller.updateStep.bind(controller),
-  deleteStep: controller.deleteStep.bind(controller)
+  validate: controller.validate.bind(controller),
+  setEntryNode: controller.setEntryNode.bind(controller),
+  listNodes: controller.listNodes.bind(controller),
+  createNode: controller.createNode.bind(controller),
+  updateNode: controller.updateNode.bind(controller),
+  deleteNode: controller.deleteNode.bind(controller),
+  createEdge: controller.createEdge.bind(controller),
+  deleteEdge: controller.deleteEdge.bind(controller)
 };

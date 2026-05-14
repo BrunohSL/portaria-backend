@@ -3,8 +3,8 @@ const sequelize = require('../config/sequelize');
 
 const Condominium = sequelize.define('Condominium', {
   id: {
-    type: DataTypes.UUID,
-    defaultValue: DataTypes.UUIDV4,
+    type: DataTypes.INTEGER,
+    autoIncrement: true,
     primaryKey: true
   },
   name: {
@@ -39,23 +39,9 @@ const Condominium = sequelize.define('Condominium', {
     type: DataTypes.BOOLEAN,
     defaultValue: true
   },
-  twilio_phone_number: {
-    type: DataTypes.STRING,
-    allowNull: true
-  },
   fallback_extension: {
     type: DataTypes.STRING,
     allowNull: true
-  },
-  gates_config: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: {}
-  },
-  extensions_config: {
-    type: DataTypes.JSON,
-    allowNull: true,
-    defaultValue: {}
   },
   level1_label: {
     type: DataTypes.STRING,
@@ -68,7 +54,7 @@ const Condominium = sequelize.define('Condominium', {
     defaultValue: 'Apto'
   },
   created_by: {
-    type: DataTypes.UUID,
+    type: DataTypes.INTEGER,
     allowNull: true
   }
 }, {
