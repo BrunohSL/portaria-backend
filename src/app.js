@@ -10,10 +10,7 @@ const loggerMiddleware = require('./middlewares/logger');
 const logger = require('./config/logger');
 const errorHandler = require('./middlewares/errorHandler');
 const auditMiddleware = require('./middlewares/audit');
-const { authMiddleware } = require('./middlewares/auth');
-const { checkRole } = require('./middlewares/authorization');
-const { client: metricsClient, dbPoolMetrics, queueDepth } = require('./config/metrics');
-const { callQueue } = require('./config/queue');
+const { client: metricsClient, dbPoolMetrics } = require('./config/metrics');
 const authRoutes = require('./routes/authRoutes');
 const condominiumRoutes = require('./routes/condominiumRoutes');
 const callRoutes = require('./routes/callRoutes');
@@ -64,16 +61,6 @@ const authLimiter = rateLimit({
 });
 app.use('/api/auth', authLimiter);
 
-// Rate limiting para webhook Twilio (30 req/min)
-const webhookLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 30,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { success: false, error: 'Limite de webhooks excedido.' }
-});
-app.use('/api/calls/webhook', webhookLimiter);
-
 // Middlewares globais
 app.use(express.json({ limit: '100kb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -99,14 +86,6 @@ app.get('/health', async (req, res) => {
   } catch {
     health.status = 'degraded';
     health.services.database = 'unreachable';
-  }
-
-  try {
-    await callQueue.isReady();
-    health.services.redis = 'ok';
-  } catch {
-    health.status = 'degraded';
-    health.services.redis = 'unreachable';
   }
 
   if (health.status !== 'ok') {
@@ -137,16 +116,6 @@ app.get('/metrics', async (req, res) => {
         dbPoolMetrics.set({ state: 'waiting' }, pool.waiting || 0);
       }
     }
-    try {
-      const counts = await callQueue.getJobCounts();
-      queueDepth.set({ queue: callQueue.name, state: 'waiting' }, counts.waiting || 0);
-      queueDepth.set({ queue: callQueue.name, state: 'active' }, counts.active || 0);
-      queueDepth.set({ queue: callQueue.name, state: 'completed' }, counts.completed || 0);
-      queueDepth.set({ queue: callQueue.name, state: 'failed' }, counts.failed || 0);
-      queueDepth.set({ queue: callQueue.name, state: 'delayed' }, counts.delayed || 0);
-    } catch (qErr) {
-      logger.error({ msg: 'Erro ao coletar metricas de filas', error: qErr.message });
-    }
 
     res.set('Content-Type', metricsClient.register.contentType);
     res.end(await metricsClient.register.metrics());
@@ -161,24 +130,6 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
   customSiteTitle: 'Portaria API Docs'
 }));
-
-// Bull Board
-const { createBullBoard } = require('@bull-board/api');
-const { BullAdapter } = require('@bull-board/api/bullAdapter');
-const { ExpressAdapter } = require('@bull-board/express');
-
-const bullBoardAdapter = new ExpressAdapter();
-bullBoardAdapter.setBasePath('/admin/queues');
-createBullBoard({
-  queues: [new BullAdapter(callQueue)],
-  serverAdapter: bullBoardAdapter
-});
-
-if (process.env.NODE_ENV === 'production') {
-  app.use('/admin/queues', authMiddleware, checkRole(['ADM']), bullBoardAdapter.getRouter());
-} else {
-  app.use('/admin/queues', bullBoardAdapter.getRouter());
-}
 
 // Rotas da aplicacao
 const userRoutes = require('./routes/userRoutes');

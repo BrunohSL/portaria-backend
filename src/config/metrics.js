@@ -39,12 +39,6 @@ const integrationErrors = new client.Counter({
   labelNames: ['integration']
 });
 
-const queueDepth = new client.Gauge({
-  name: 'portaria_queue_depth',
-  help: 'Number of jobs in Bull queues by state',
-  labelNames: ['queue', 'state']
-});
-
 const dbPoolMetrics = new client.Gauge({
   name: 'portaria_db_pool_connections',
   help: 'Database connection pool metrics',
@@ -64,7 +58,6 @@ module.exports = {
   callsTotal,
   callDuration,
   integrationErrors,
-  queueDepth,
   dbPoolMetrics,
   activeCalls
 };

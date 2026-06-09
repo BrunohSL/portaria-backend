@@ -40,6 +40,5 @@ module.exports = {
   publicBackendUrl: process.env.PUBLIC_BACKEND_URL,
   // Quando true, o bot anuncia em voz "Iniciando <label do node>" antes de cada
   // node — útil pra debug em chamadas de teste. Default false.
-  debugAnnounceNodes: process.env.DEBUG_ANNOUNCE_NODES === 'true',
-  callQueueConcurrency: parseInt(process.env.CALL_QUEUE_CONCURRENCY) || 5
+  debugAnnounceNodes: process.env.DEBUG_ANNOUNCE_NODES === 'true'
 };

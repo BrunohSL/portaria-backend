@@ -1,17 +1,16 @@
-.PHONY: help build up up-logs down restart logs dev dev-full clean mysql redis migrate migrate-fresh prune backup restore ssh-prod
+.PHONY: help build up up-logs down restart logs dev dev-full clean mysql migrate migrate-fresh prune backup restore ssh-prod
 
 help:
 	@echo "Comandos disponíveis:"
 	@echo "  make build         - Constrói a imagem Docker"
-	@echo "  make up            - Sobe MySQL + Redis em background"
-	@echo "  make up-logs       - Sobe MySQL + Redis com logs visíveis"
+	@echo "  make up            - Sobe MySQL em background"
+	@echo "  make up-logs       - Sobe MySQL com logs visíveis"
 	@echo "  make down          - Para os containers"
 	@echo "  make restart       - Reinicia os containers"
 	@echo "  make logs          - Exibe os logs dos containers"
-	@echo "  make dev           - Sobe MySQL + Redis e roda a API local (npm run dev)"
-	@echo "  make dev-full      - Sobe tudo (MySQL + Redis + API + Frontend)"
+	@echo "  make dev           - Sobe MySQL e roda a API local (npm run dev)"
+	@echo "  make dev-full      - Sobe tudo (MySQL + API + Frontend)"
 	@echo "  make mysql         - Conecta no MySQL"
-	@echo "  make redis         - Conecta no Redis"
 	@echo "  make migrate       - Roda as migrations"
 	@echo "  make migrate-fresh - Dropa o banco e recria tudo"
 	@echo "  make backup        - Faz backup do banco de dados"
@@ -24,10 +23,10 @@ build:
 	docker compose build
 
 up:
-	docker compose up -d mysql redis
+	docker compose up -d mysql
 
 up-logs:
-	docker compose up mysql redis
+	docker compose up mysql
 
 down:
 	docker compose down
@@ -39,14 +38,14 @@ logs:
 	docker compose logs -f
 
 dev:
-	docker compose up -d mysql redis
+	docker compose up -d mysql
 	@echo "Aguardando MySQL ficar pronto..."
 	@until docker exec portaria-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
 	@echo "MySQL pronto! Iniciando API..."
 	npm run dev
 
 dev-full:
-	docker compose up -d mysql redis
+	docker compose up -d mysql
 	@echo "Aguardando MySQL ficar pronto..."
 	@until docker exec portaria-mysql mysqladmin ping -h localhost --silent 2>/dev/null; do sleep 1; done
 	@echo "MySQL pronto! Iniciando API em background..."
@@ -56,9 +55,6 @@ dev-full:
 
 mysql:
 	docker exec -it portaria-mysql mysql -uroot -pportaria_dev_2026 portaria
-
-redis:
-	docker exec -it portaria-redis redis-cli
 
 migrate:
 	npm run migrate

@@ -59,7 +59,7 @@ const auditMiddleware = (req, res, next) => {
 function shouldAuditRequest(req) {
   const excludedPaths = [
     '/health', '/metrics', '/.well-known/', '/security.txt',
-    '/admin/queues', '/api-docs', '/swagger-ui', '/favicon'
+    '/api-docs', '/swagger-ui', '/favicon'
   ];
 
   if (excludedPaths.some(path => req.path.startsWith(path))) {

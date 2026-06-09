@@ -7,19 +7,6 @@ const router = Router();
 
 /**
  * @swagger
- * /api/calls/webhook/incoming:
- *   post:
- *     tags: [Calls]
- *     summary: Webhook de chamada entrante (Twilio)
- *     description: Recebe chamadas do Twilio. Sem autenticacao JWT.
- *     responses:
- *       200:
- *         description: TwiML response
- */
-router.post('/webhook/incoming', callController.incomingWebhook);
-
-/**
- * @swagger
  * /api/calls/sessions:
  *   get:
  *     tags: [Calls]

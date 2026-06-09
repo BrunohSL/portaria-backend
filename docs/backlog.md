@@ -1,145 +1,187 @@
 # Backlog — Portaria
 
-Documento unificado de tudo que foi implementado e o que falta.
+Lista viva de tarefas futuras (backend `portaria` + frontend `portaria-front`). Formato e regras de manutenção em `CLAUDE.md` → seção **Backlog**.
+
+**Status possíveis:** 📋 Backlog · 🚧 Em andamento · ⏸️ Bloqueada · ✅ Concluída · ❌ Cancelada
+**Prioridade:** 🔴 Alta · 🟡 Média · 🟢 Baixa
+
+Docs de apoio (referência, não cards): `gap-analysis-gpt-vs-implementado.md` (produto idealizado × implementado) e `backlog-portal-antigo.md` (features do portal-main ainda não migradas). A Fase 1 (setup funcional: auth, CRUDs, editor de fluxos, chamadas, usuários, auditoria) já está implementada — ver histórico no git.
 
 ---
 
-## Fase 1 — Setup funcional [CONCLUIDA]
+## BL-001 — Implementar chamadas reais às APIs externas (substituir stubs)
+- **Status:** ⏸️ Bloqueada
+- **Prioridade:** 🔴 Alta
+- **Criada em:** 2026-06-08
+- **Contexto:** Hoje o motor de chamada (ConversationRelay WebSocket) já roda com OpenAI real (intent/extração/yes-no) e Twilio outbound funcional. Faltam: os métodos REST do `TwilioService.js` (validateWebhook, transferCall, endCall, transcribeAudio) que ainda são stub/TODO, e o `ElevenLabsService.js` que é mock (o TTS hoje sai pela plataforma Twilio via ConversationRelay, então o service não está no hot path — decidir se ele tem uso real ou some). Bloqueada por depender de validar protocolos contra o N8N atual antes de fechar as integrações.
 
-- [x] Backend: Auth (JWT + roles ADM/CLIENT_ADM/SUPPORT)
-- [x] Backend: CRUD Condominios (com gates_config e extensions_config JSON)
-- [x] Backend: CRUD Unidades
-- [x] Backend: CRUD Moradores
-- [x] Backend: CRUD Fluxos + Steps
-- [x] Backend: Call Sessions + Logs
-- [x] Backend: Audit Logs
-- [x] Backend: CRUD Usuarios + GET /api/auth/me
-- [x] Backend: Bull Queue (Redis) + Idempotencia
-- [x] Backend: Prometheus Metrics
-- [x] Backend: Docker + CI/CD + Makefile
-- [x] Frontend: Login
-- [x] Frontend: Dashboard (basica)
-- [x] Frontend: Lista de condominios + detalhe com tabs (unidades, moradores, fluxos)
-- [x] Frontend: Pagina de configuracoes do condominio (portoes, ramais, fallback)
-- [x] Frontend: Pagina de edicao do condominio
-- [x] Frontend: Editor de steps do fluxo (lista com config form por tipo)
-- [x] Frontend: Chamadas (lista + detalhe com timeline de logs)
-- [x] Frontend: Usuarios (CRUD com senha temporaria)
-- [x] Frontend: Auditoria
-- [x] Frontend: Sidebar com navegacao por role
+## BL-002 — Abrir portão de verdade (COMANDO → HTTP pro DNS do equipamento)
+- **Status:** ⏸️ Bloqueada
+- **Prioridade:** 🔴 Alta
+- **Criada em:** 2026-06-08
+- **Contexto:** O node `COMANDO` (abrir portão) é mock: só loga `[MOCK]`, não comunica com o equipamento. A tabela `gates` já tem `dns`, `brand`, `extension`, `position`, mas nenhum request HTTP é feito. Precisa de um `GateService` que monte e dispare o request pro DNS do interfone. Bloqueada porque o protocolo do equipamento ainda não está definido — depende de acesso ao N8N original / docs do fabricante. Ver `gap-analysis-gpt-vs-implementado.md` §5.
 
----
+## BL-003 — Retry/timeout configurável por node
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** O ConversationRelay já trata silêncio globalmente (10s, máx. 2 retentativas, depois encerra). Falta tornar isso configurável por node (`config.retry`, `config.timeout_seconds`) e expor no `ConfigPanel` do editor. Ver `gap-analysis` §4.
 
-## Fase 2 — Core de ligacao [PENDENTE — aguardando acesso ao N8N]
+## BL-004 — Fallback pra ramal de emergência quando o fluxo falha
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** `condominiums.fallback_extension` existe mas não há lógica que transfira a chamada pra esse ramal quando o fluxo trava/erra (esgotou retries, exceção no motor). Definir os gatilhos de fallback e implementar a transferência.
 
-Depende de acesso as rotas e fluxos do N8N atual para entender protocolos de comunicacao.
+## BL-005 — Emitir eventos de chamada via Socket.IO (backend)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** A infra de Socket.IO já existe no `server.js` (auth por JWT, rooms `super_admin` e `condominium:{id}`, `io` em `app.locals.io`), mas o motor de chamada não emite nada. Emitir `call:started`, `call:step_changed`, `call:log`, `call:ended` a partir do `conversationRelay.js`. Pré-requisito de BL-006. Ver `gap-analysis` §6.
 
-- [ ] Implementar integracoes reais (Twilio, OpenAI GPT, ElevenLabs) — substituir mocks
-- [ ] Retry/timeout por step no callProcessor (visitante nao responde → repete 2x → encerra)
-- [ ] Comunicacao real com equipamento no OPEN_GATE (HTTP request pro DNS do interfone)
-- [ ] Fallback para ramal de emergencia quando fluxo falha
-- [ ] Socket.IO emitindo eventos de chamada (call:started, call:step_changed, call:ended)
-- [ ] Frontend recebendo eventos de chamada em tempo real
-- [ ] Logica de eclusa/multi-portao (abrir porta 1 → transferir atendimento pra porta 2)
+## BL-006 — Dashboard de chamadas em tempo real (frontend)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Depende de:** BL-005
+- **Contexto:** Adicionar cliente Socket.IO no front, hook `useSocket`, cards de chamadas ativas atualizando ao vivo no dashboard e indicador "ao vivo" + timeline em tempo real no detalhe da chamada. Hoje a UI é só TanStack Query sem polling.
 
----
+## BL-007 — Lógica de eclusa / multi-portão
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Depende de:** BL-002
+- **Contexto:** Condomínio com eclusa: visitante chega no portão 1, entra, e o atendimento continua no equipamento do portão 2 (N portões até o destino). Pode ser modelado como sequência OPEN_GATE → TRANSFER pra ramal do próximo equipamento → continuar fluxo, ou um node `TRANSFER_EQUIPMENT`. Ver `gap-analysis` §7.
 
-## Fase 3 — Polish e UX
+## BL-008 — Dashboard com KPIs reais
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** O dashboard hoje mostra placeholders ("-"). Popular com métricas reais: total de condomínios, chamadas hoje, total de moradores, custo estimado do período, etc.
 
-- [ ] Dashboard com chamadas ativas ao vivo (cards atualizando via socket)
-- [ ] Dashboard com KPIs reais (total condominios, chamadas hoje, moradores)
-- [ ] Builder visual de fluxos (drag-and-drop dos steps)
-- [ ] Voice ID do ElevenLabs configuravel por condominio
-- [ ] Paginacao nas tabelas (condominios, moradores, chamadas, audit)
-- [ ] Filtros avancados nas listagens
-- [ ] Edicao inline de moradores e unidades
+## BL-009 — Polir UX do editor de fluxos (drag-and-drop)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** O editor visual (React Flow) já existe e funciona com save diff-based. Melhorias de UX: arrastar blocos da palette pro canvas, auto-layout melhor, preview do fluxo montado, undo/redo. Era o "builder visual" do `gap-analysis` §3 — a base já está pronta, isso é refinamento.
 
----
+## BL-010 — Voice ID do ElevenLabs por condomínio
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** Hoje o voice ID é global (`ELEVENLABS_VOICE_ID`). Permitir configurar por condomínio (campo no `condominiums` + uso no TwiML do ConversationRelay) pra dar identidade de voz própria a cada cliente.
 
-## Fase 4 — Financeiro
+## BL-011 — Paginação nas listagens
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** Tabelas (condomínios, moradores, chamadas, auditoria) carregam tudo de uma vez. Implementar paginação server-side (o `listSessions` já aceita `limit/offset`; padronizar nos demais endpoints e na UI).
 
-Migrado do portal antigo (portal-main). Sistema completo de billing via Stripe.
+## BL-012 — Filtros avançados nas listagens
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** Filtros combinados (por status, período, condomínio, tipo) nas telas de chamadas e auditoria.
 
-- [ ] Tabela `pagamentos` (stripe_charge_id, valor, status, metodo_pagamento)
-- [ ] Tabela `clientes_pagamentos` (cobranças mensais por condominio)
-- [ ] Tabela `comissoes` (comissoes para revendedores)
-- [ ] Tabela `configuracao_comissoes` (percentuais por revendedor)
-- [ ] Tabela `credenciais_stripe` (chaves Stripe)
-- [ ] Campo `valor_licenca` e `data_ativacao` no condominio
-- [ ] Cobranca recorrente baseada na data_ativacao
-- [ ] Multa por atraso (10% 1-7 dias, 20% >7 dias)
-- [ ] Comissoes automaticas para revendedores
-- [ ] Cron de processamento mensal (5o dia util)
-- [ ] Webhook Stripe para confirmacao de pagamento
-- [ ] Frontend: pagina financeira, relatorios, pagamentos
+## BL-013 — Edição inline de moradores e unidades
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** Hoje editar morador/unidade exige dialog dedicado. Permitir edição inline na tabela pra agilizar manutenção de cadastro.
 
----
+## BL-014 — Sistema financeiro / billing via Stripe
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** Migrar do portal-main todo o sistema de cobrança: tabelas `pagamentos`, `clientes_pagamentos`, `comissoes`, `configuracao_comissoes`, `credenciais_stripe`. Regras: cobrança recorrente baseada na `data_ativacao`, multa por atraso (10% 1-7 dias, 20% >7 dias), comissões pra revendedores (1º mês proporcional), cron no 5º dia útil, webhook Stripe. Front: páginas financeira/relatórios/pagamentos. Detalhes completos em `backlog-portal-antigo.md` §2.
 
-## Fase 5 — Hierarquia de roles
+## BL-015 — Hierarquia de roles (distribuidor/revendedor/gestor/morador)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** O portal antigo tem 6 roles em hierarquia; o back novo só tem ADM/CLIENT_ADM/SUPPORT. Adicionar `DISTRIBUIDOR`, `REVENDEDOR`, `GESTOR`, `MORADOR` no ENUM + tabelas `distribuidores`, `revendedores`, `gestores` + middleware de hierarquia (quem vê/edita quem) + telas. Atrelado a BL-014 (comissões). Ver `backlog-portal-antigo.md` §1.
 
-Roles adicionais do portal antigo que nao existem no backend.
+## BL-016 — 2FA (TOTP via Google Authenticator)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** Tabelas `two_factor` (secret, backup_codes, habilitado) e `two_factor_log`. Endpoints setup/verify/enable/disable/validate. QR code + backup codes. Ver `backlog-portal-antigo.md` §4.
 
-- [ ] Role DISTRIBUIDOR (gerencia revendedores)
-- [ ] Role REVENDEDOR (vende licencas para condominios)
-- [ ] Role GESTOR (gerente atribuido a condominios especificos)
-- [ ] Role MORADOR (acesso limitado)
-- [ ] Tabela `distribuidores`
-- [ ] Tabela `revendedores`
-- [ ] Tabela `gestores` (usuario_id, clientes[], ativo)
-- [ ] Middleware de hierarquia (quem pode ver/editar quem)
-- [ ] Frontend: telas de gestao por role
+## BL-017 — Termos de uso (versionamento + aceite obrigatório)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** Tabelas `termos_uso` e `usuario_termos_aceites`. Aceite obrigatório no primeiro acesso, painel de gestão de termos. Ver `backlog-portal-antigo.md` §5.
 
----
+## BL-018 — Onboarding de primeiro acesso
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** Fluxo: verificação de email → troca de senha (já existe `first_access`) → setup 2FA → aceite de termos → tour. Campos `email_verificado`, `codigo_verificacao_email`, tabela `onboarding`. Ver `backlog-portal-antigo.md` §6.
 
-## Fase 6 — Seguranca
+## BL-019 — Redefinição de senha (esqueci senha)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🔴 Alta
+- **Criada em:** 2026-06-08
+- **Depende de:** BL-021
+- **Contexto:** Fluxo esqueci-senha → email com link/código → nova senha. Depende do email system (BL-021) pra enviar o link. Listado como prioridade Alta no `backlog-portal-antigo.md` §11.
 
-- [ ] 2FA (TOTP via Google Authenticator)
-- [ ] Tabela `two_factor` (secret, backup_codes, habilitado)
-- [ ] Termos de uso (versionamento, aceite obrigatorio)
-- [ ] Tabela `termos_uso` + `usuario_termos_aceites`
-- [ ] Onboarding completo (verificacao email, troca senha, tour)
-- [ ] Bloqueio por tentativas de login (5 tentativas → lock 15min)
-- [ ] Session timeout (30min)
-- [ ] Redefinicao de senha (esqueci senha → email com link)
+## BL-020 — Bloqueio por tentativas + session timeout
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** Bloquear login após 5 tentativas (lock 15min) e expirar sessão por inatividade (30min). O JWT hoje não tem refresh; avaliar estratégia junto. Ver `backlog-portal-antigo.md` §11.
 
----
+## BL-021 — Email system (SMTP + templates)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** SMTP configurável + templates editáveis com variáveis + logs de envio. Tabelas `credenciais_smtp`, `email_templates`, `email_logs`. Pré-requisito de BL-019 e de emails transacionais (boas-vindas, cobrança). Ver `backlog-portal-antigo.md` §7.
 
-## Fase 7 — Conveniencia
+## BL-022 — Importação em massa de unidades e moradores (planilhas)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** Upload Excel/CSV pra criar unidades/moradores em massa, com download de template, validação por linha e rollback transacional. Endpoints `/units/import`, `/residents/import`, `/template`. Ver `backlog-portal-antigo.md` §8.
 
-- [ ] Email system (SMTP configuravel + templates editaveis)
-- [ ] Tabelas `credenciais_smtp` + `email_templates` + `email_logs`
-- [ ] Import de planilhas (Excel/CSV para unidades e moradores em massa)
-- [ ] Download de template de planilha
-- [ ] Identidade visual (logo e cores customizaveis por condominio)
-- [ ] Notificacoes in-app
-- [ ] Activity logs com diff (dados_anteriores vs dados_novos)
-- [ ] Tipo de condominio (horizontal, vertical, hibrido, comercial, singular)
-- [ ] Campos dinamicos por tipo de condominio
-- [ ] Discord integration (webhook)
-- [ ] Sentry (error monitoring em producao)
+## BL-023 — Identidade visual por condomínio
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** Logo + cores primária/secundária por condomínio, aplicadas dinamicamente no front. Tabela `identidade_visual`. Ver `backlog-portal-antigo.md` §9.
 
----
+## BL-024 — Activity logs com diff (dados anteriores × novos)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** O `audit_logs` já existe básico. Adicionar `dados_anteriores`/`dados_novos` (JSON) pra registrar o diff de cada alteração, filtragem por hierarquia de role e filtros combinados + paginação. Ver `backlog-portal-antigo.md` §10.
 
-## Campos pendentes de adicionar
+## BL-025 — Tipo de condomínio + campos dinâmicos
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** `tipo_cliente` (horizontal/vertical/híbrido/comercial/singular) com campos de unidade variando por tipo. Complementa a nomenclatura customizável (`level1_label`/`level2_label`) que já existe.
 
-### Condominio (campos do portal antigo nao migrados)
-| Campo | Tipo | Descricao |
-|-------|------|-----------|
-| razao_social | VARCHAR | Razao social |
-| cpf | VARCHAR | CPF do responsavel |
-| email | VARCHAR | Email do condominio |
-| tipo_cliente | ENUM | horizontal/vertical/hibrido/comercial/singular |
-| data_ativacao | DATE | Data de ativacao (define cobranca) |
-| status | ENUM | aguardando_ativacao/ativo/suspenso/cancelado/teste/isento |
-| status_pagamento | ENUM | pendente/efetuado/atrasado/teste/isento |
-| valor_licenca | DECIMAL | Valor da mensalidade |
-| total_unidades | INT | Counter cache |
-| total_moradores | INT | Counter cache |
-| stripe_customer_id | VARCHAR | ID no Stripe |
-| revendedor_id | FK | Revendedor que vendeu |
+## BL-026 — Discord + Sentry (observabilidade externa)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** Webhook Discord pra alertas (ex: falha de integração, como o guardia faz) e Sentry pra error monitoring em produção. Ver `backlog-portal-antigo.md` §11.
 
-### Morador (campos do portal antigo nao migrados)
-| Campo | Tipo | Descricao |
-|-------|------|-----------|
-| apelido | VARCHAR | Nome curto |
-| codigo_pais | VARCHAR | Codigo do pais (+55) |
+## BL-027 — Campos faltantes em condomínio e morador (portal antigo)
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** Migrar campos que existem no portal-main e faltam aqui. Condomínio: `razao_social`, `cpf`, `email`, `tipo_cliente`, `data_ativacao`, `status` (expandido), `status_pagamento`, `valor_licenca`, `total_unidades`/`total_moradores` (counter cache), `stripe_customer_id`, `revendedor_id`. Morador: `apelido`, `codigo_pais`. Vários se cruzam com BL-014/BL-015. Ver `backlog-portal-antigo.md` §12-13.
+
+## BL-028 — Escrever suíte de testes
+- **Status:** 📋 Backlog
+- **Prioridade:** 🟡 Média
+- **Criada em:** 2026-06-08
+- **Contexto:** `__tests__/` está vazio (só o scaffolding unit/ e integration/ + scripts npm). Priorizar testes do motor de fluxo (`conversationRelay.js`), services e middlewares de auth/authorization. O simulador (`docs/simulator.md`) pode servir de base pra testes de fluxo end-to-end.
+
+## BL-029 — Remover código morto do Bull/callProcessor
+- **Status:** ✅ Concluída
+- **Prioridade:** 🟢 Baixa
+- **Criada em:** 2026-06-08
+- **Contexto:** O caminho da fila Bull (`callQueue` + `callWorker.js` + `callProcessor.js`) e o webhook `/api/calls/webhook/incoming` (retornava 410) eram legado — o motor real é o ConversationRelay (WebSocket). Ninguém chamava `callQueue.add()`. **Resolvido (2026-06-09):** removidos `config/queue.js`, `queues/` (callProcessor, callQueue), `workers/callWorker.js`, `utils/idempotency.js` e o model `ProcessedEvent` (todos mortos); tiradas as deps `bull`/`@bull-board/*` do `package.json`, o Bull Board e a métrica `queueDepth`, o webhook legado + `incomingWebhook`, e o rate limiter do webhook. Como o Redis ficou órfão (nenhum outro consumidor), também foi removido da infra (docker-compose, docker-stack, Makefile, `.env`/`.env.example`, health check). A tabela `processed_events` continua no banco (migration imutável), mas sem código ligado. Multi-servidor futuro vai precisar reintroduzir Redis pub/sub — ver gotcha de estado em memória no `CLAUDE.md`.

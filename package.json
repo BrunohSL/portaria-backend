@@ -22,11 +22,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@bull-board/api": "^6.6.2",
-    "@bull-board/express": "^6.6.2",
     "axios": "^1.6.2",
     "bcryptjs": "^3.0.3",
-    "bull": "^4.16.0",
     "compression": "^1.7.5",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",

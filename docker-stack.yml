@@ -36,26 +36,6 @@ services:
       retries: 10
       start_period: 30s
 
-  portaria-redis:
-    image: redis:7-alpine
-    networks:
-      - 6LabNet
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          memory: 128M
-          cpus: "0.25"
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 3
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-
   portaria-api:
     image: portaria-api:latest
     networks:
@@ -67,15 +47,23 @@ services:
       - DB_PORT=3306
       - DB_NAME=portaria
       - DB_USER=portaria
-      - REDIS_URL=redis://portaria-api_portaria-redis:6379
       - JWT_EXPIRES_IN=24h
       - CORS_ORIGIN=https://portaria.6lab.com.br
       - TZ=America/Sao_Paulo
+      # URL pública (https) onde o Twilio alcança o webhook de voz
+      - PUBLIC_BACKEND_URL=https://portaria-api.6lab.com.br
+      # Twilio: account_sid e auth_token vêm por secret.
+      # O número de origem vem do cadastro do condomínio no banco, não daqui.
+      # OpenAI (a api_key vem por secret)
+      - OPENAI_MODEL=gpt-4o-mini
+      # ElevenLabs (a api_key vem por secret)
+      - ELEVENLABS_VOICE_ID=7iqXtOF3wl3pomwXFY7G
     secrets:
       - portaria_db_password
       - portaria_jwt_secret
       - portaria_encryption_key
       - portaria_metrics_token
+      - portaria_twilio_account_sid
       - portaria_twilio_auth_token
       - portaria_openai_api_key
       - portaria_elevenlabs_api_key
@@ -142,6 +130,8 @@ secrets:
   portaria_encryption_key:
     external: true
   portaria_metrics_token:
+    external: true
+  portaria_twilio_account_sid:
     external: true
   portaria_twilio_auth_token:
     external: true

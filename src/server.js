@@ -6,9 +6,6 @@ const { port } = require('./config/env');
 const logger = require('./config/logger');
 const sequelize = require('./config/sequelize');
 
-// Start call workers
-require('./workers/callWorker');
-
 // Socket.IO setup
 const http = require('http');
 const { Server } = require('socket.io');
@@ -97,14 +94,6 @@ async function shutdown(signal) {
   });
 
   io.close();
-
-  try {
-    const { callQueue } = require('./config/queue');
-    await callQueue.close();
-    logger.info({ msg: 'Filas Bull fechadas' });
-  } catch (err) {
-    logger.error({ msg: 'Erro ao fechar filas', error: err.message });
-  }
 
   try {
     await sequelize.close();
