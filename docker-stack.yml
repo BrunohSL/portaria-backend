@@ -18,7 +18,7 @@ services:
       - CORS_ORIGIN=https://central.portaria.ai
       - TZ=America/Sao_Paulo
       # URL pública (https) onde o Twilio alcança o webhook de voz
-      - PUBLIC_BACKEND_URL=https://portaria-api.6lab.com.br
+      - PUBLIC_BACKEND_URL=https://central.portaria.ai
       # Twilio: account_sid e auth_token vêm por secret.
       # O número de origem vem do cadastro do condomínio no banco, não daqui.
       # OpenAI (a api_key vem por secret)
@@ -42,9 +42,12 @@ services:
           cpus: "0.50"
       labels:
         - "traefik.enable=true"
-        - "traefik.http.routers.portaria-api.rule=Host(`portaria-api.6lab.com.br`)"
+        # API no mesmo domínio do front, roteada por path (/api). Prioridade
+        # maior que o router catch-all do front pra /api/* cair aqui.
+        - "traefik.http.routers.portaria-api.rule=Host(`central.portaria.ai`) && PathPrefix(`/api`)"
         - "traefik.http.routers.portaria-api.entrypoints=websecure"
         - "traefik.http.routers.portaria-api.tls.certresolver=letsencryptresolver"
+        - "traefik.http.routers.portaria-api.priority=100"
         - "traefik.http.services.portaria-api.loadbalancer.server.port=3000"
       update_config:
         parallelism: 1

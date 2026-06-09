@@ -175,7 +175,7 @@ Status possíveis: 📋 Backlog · 🚧 Em andamento · ⏸️ Bloqueada · ✅ 
 
 ## Rules of engagement
 
-- **Não fazer `git commit` sem o usuário pedir.** Mesmo após implementar.
+- **NUNCA rodar `git commit`, `git add`/stage ou `git push` — nem após implementar, nem para "deixar pronto".** Git é responsabilidade exclusiva do usuário. Deixe as mudanças no working tree (sem stage) e apenas avise o que foi alterado.
 - **Não rodar comandos destrutivos em prod** (DROP, DELETE em massa, `git push --force`, `git reset --hard`) sem confirmação. Sugerir backup antes (`make backup`).
 - **Não editar migration já aplicada** — crie nova migration de fix-forward.
 - **Após mexer no backend:** `node --check` nos arquivos tocados. `node -e "require('./src/server')"` sobe o servidor (WS/Socket.IO/DB), então prefira `node --check`; pra validar o grafo de `require` sem subir o listen, `node -e "require('./src/models/associations'); require('./src/app')"`.
