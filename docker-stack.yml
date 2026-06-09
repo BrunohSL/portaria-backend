@@ -15,7 +15,7 @@ services:
       - DB_NAME=portaria
       - DB_USER=portaria
       - JWT_EXPIRES_IN=24h
-      - CORS_ORIGIN=https://portaria.6lab.com.br
+      - CORS_ORIGIN=https://central.portaria.ai
       - TZ=America/Sao_Paulo
       # URL pública (https) onde o Twilio alcança o webhook de voz
       - PUBLIC_BACKEND_URL=https://portaria-api.6lab.com.br
