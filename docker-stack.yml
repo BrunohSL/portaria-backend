@@ -1,41 +1,8 @@
 version: "3.8"
 
 services:
-  portaria-mysql:
-    image: mysql:8.0.42
-    networks:
-      - 6LabNet
-    environment:
-      - MYSQL_ROOT_PASSWORD_FILE=/run/secrets/portaria_db_root_password
-      - MYSQL_DATABASE=portaria
-      - MYSQL_USER=portaria
-      - MYSQL_PASSWORD_FILE=/run/secrets/portaria_db_password
-    volumes:
-      - portaria_mysql_data:/var/lib/mysql
-    secrets:
-      - portaria_db_root_password
-      - portaria_db_password
-    command: --default-authentication-plugin=mysql_native_password --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
-    deploy:
-      replicas: 1
-      resources:
-        limits:
-          memory: 512M
-          cpus: "0.50"
-      placement:
-        constraints:
-          - node.role == manager
-      restart_policy:
-        condition: on-failure
-        delay: 5s
-        max_attempts: 5
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 30s
-
+  # Sem MySQL próprio: o portaria-api usa o MySQL já existente do guardia
+  # (service guardia-api_guardia-mysql na rede 6LabNet), num database separado.
   portaria-api:
     image: portaria-api:latest
     networks:
@@ -43,7 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - DB_HOST=portaria-api_portaria-mysql
+      - DB_HOST=guardia-api_guardia-mysql
       - DB_PORT=3306
       - DB_NAME=portaria
       - DB_USER=portaria
@@ -93,7 +60,7 @@ services:
     networks:
       - 6LabNet
     environment:
-      - ADMINER_DEFAULT_SERVER=portaria-api_portaria-mysql
+      - ADMINER_DEFAULT_SERVER=guardia-api_guardia-mysql
       - ADMINER_DESIGN=dracula
     deploy:
       replicas: 0
@@ -112,18 +79,12 @@ services:
         delay: 5s
         max_attempts: 3
 
-volumes:
-  portaria_mysql_data:
-    driver: local
-
 networks:
   6LabNet:
     external: true
 
 secrets:
   portaria_db_password:
-    external: true
-  portaria_db_root_password:
     external: true
   portaria_jwt_secret:
     external: true
