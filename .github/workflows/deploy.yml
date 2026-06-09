@@ -19,6 +19,6 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
-            cd ../opt/portaria-api
+            cd /opt/portaria-backend
             chmod +x deploy.sh
             ./deploy.sh
