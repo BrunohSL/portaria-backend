@@ -103,6 +103,7 @@ async function contactMorador({ callSessionId, moradorName, moradorPhone, visito
 
     pending.set(callSessionId, { resolve, timeoutId, settled: false });
 
+    const createStartedAt = Date.now();
     try {
       const call = await twilioClient.createCall({
         From: resolvedFrom,
@@ -115,14 +116,14 @@ async function contactMorador({ callSessionId, moradorName, moradorPhone, visito
       });
       const entry = pending.get(callSessionId);
       if (entry) entry.twilioCallSid = call.sid;
-      logger.info({ msg: '[moradorContact] outbound iniciado', callSessionId, twilioCallSid: call.sid, to: toNumber });
+      logger.info({ msg: '[moradorContact] outbound iniciado', callSessionId, twilioCallSid: call.sid, to: toNumber, createMs: Date.now() - createStartedAt });
     } catch (err) {
       const entry = pending.get(callSessionId);
       if (entry && !entry.settled) {
         entry.settled = true;
         clearTimeout(entry.timeoutId);
         pending.delete(callSessionId);
-        logger.error({ msg: '[moradorContact] erro criando outbound', callSessionId, error: err.message, code: err.code });
+        logger.error({ msg: '[moradorContact] erro criando outbound', callSessionId, error: err.message, code: err.code, createMs: Date.now() - createStartedAt });
         resolve({ decision: 'semResposta', reason: 'outbound_failed' });
       }
     }

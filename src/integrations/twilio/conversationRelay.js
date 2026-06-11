@@ -232,6 +232,7 @@ async function handleSetup(ws, session, msg) {
   session.from = msg.from;
   session.to = msg.to;
 
+  const setupStartedAt = Date.now();
   logger.info({ msg: '[ConversationRelay] setup', callSid: msg.callSid, from: msg.from, to: msg.to });
 
   // Identifica o condomínio pelo número discado
@@ -279,6 +280,10 @@ async function handleSetup(ws, session, msg) {
     });
   }
   session.currentNode = session.nodesById.get(rootFlow.entry_node_id);
+
+  // DEBUG: tempo total do setup (WS conectado → pronto pra falar). Cobre as
+  // queries de banco (condomínio, CallSession, fluxo) que rodam antes de "atender".
+  logger.info({ msg: '[ConversationRelay] setup concluído', callSid: msg.callSid, setupMs: Date.now() - setupStartedAt, entryNodeId: rootFlow.entry_node_id });
 
   // Executa nodes auto até parar num que precise input
   await runUntilInputOrEnd(ws, session);
@@ -1053,12 +1058,16 @@ function classifyIntentKeyword(transcript, catalogKey) {
 function sendText(_ws, session, text) {
   if (!session?.send) return;
   session.ttsChars = (session.ttsChars ?? 0) + (text?.length ?? 0);
+  // DEBUG: registra exatamente o que o caller vai ouvir (inclui mensagens de erro).
+  logger.info({ msg: '[ConversationRelay] → fala pro caller (TTS)', callSid: session.callSid, nodeId: session.currentNode?.id, text });
   session.send({ type: 'text', token: text, last: true });
 }
 
 function sendEnd(_ws, session) {
   if (!session?.send) return;
   session.endingNormally = true;
+  // DEBUG: registra encerramento da chamada (envio do `end` pro ConversationRelay).
+  logger.info({ msg: '[ConversationRelay] → END enviado (encerrando chamada)', callSid: session.callSid });
   session.send({ type: 'end' });
 }
 

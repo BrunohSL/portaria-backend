@@ -35,6 +35,7 @@ class OpenAIService {
     const intentsList = intents.map((i) => `- ${i.key}: ${i.label}`).join('\n');
     const systemPrompt = `${INTENT_CLASSIFICATION_SYSTEM}\n\nOpções disponíveis:\n${intentsList}\n- fallback: nenhuma das anteriores`;
 
+    const startedAt = Date.now();
     try {
       const completion = await this.client.chat.completions.create({
         model: this.model,
@@ -48,10 +49,11 @@ class OpenAIService {
       const raw = (completion.choices?.[0]?.message?.content ?? '').trim().toLowerCase();
       const validKeys = new Set([...intents.map((i) => i.key), 'fallback']);
       const key = validKeys.has(raw) ? raw : 'fallback';
+      logger.info({ msg: '[OpenAI] classifyIntent ok', model: this.model, ms: Date.now() - startedAt, key });
       return { key, usage: completion.usage };
     } catch (err) {
       integrationErrors.inc({ integration: 'openai' });
-      logger.error({ msg: '[OpenAI] erro em classifyIntent', error: err.message });
+      logger.error({ msg: '[OpenAI] erro em classifyIntent', error: err.message, ms: Date.now() - startedAt });
       throw err;
     }
   }
@@ -86,6 +88,7 @@ class OpenAIService {
 
     const userMessage = `Já coletado: ${JSON.stringify(alreadyCollected)}\nVisitante disse: "${transcript}"`;
 
+    const startedAt = Date.now();
     try {
       const completion = await this.client.chat.completions.create({
         model: this.model,
@@ -119,10 +122,11 @@ class OpenAIService {
         if (extracted[key]) extracted[key] = String(extracted[key]).replace(/\D/g, '');
       }
 
+      logger.info({ msg: '[OpenAI] extractFields ok', model: this.model, ms: Date.now() - startedAt, keys: Object.keys(extracted) });
       return { extracted, usage: completion.usage };
     } catch (err) {
       integrationErrors.inc({ integration: 'openai' });
-      logger.error({ msg: '[OpenAI] erro em extractFields', error: err.message });
+      logger.error({ msg: '[OpenAI] erro em extractFields', error: err.message, ms: Date.now() - startedAt });
       throw err;
     }
   }
@@ -134,6 +138,7 @@ class OpenAIService {
   async classifyYesNo(transcript) {
     if (!this.client) throw new Error('OPENAI_API_KEY não configurada');
 
+    const startedAt = Date.now();
     try {
       const completion = await this.client.chat.completions.create({
         model: this.model,
@@ -147,10 +152,11 @@ class OpenAIService {
       const raw = (completion.choices?.[0]?.message?.content ?? '').trim().toLowerCase();
       const valid = new Set(['yes', 'no', 'unclear']);
       const key = valid.has(raw) ? raw : 'unclear';
+      logger.info({ msg: '[OpenAI] classifyYesNo ok', model: this.model, ms: Date.now() - startedAt, key });
       return { key, usage: completion.usage };
     } catch (err) {
       integrationErrors.inc({ integration: 'openai' });
-      logger.error({ msg: '[OpenAI] erro em classifyYesNo', error: err.message });
+      logger.error({ msg: '[OpenAI] erro em classifyYesNo', error: err.message, ms: Date.now() - startedAt });
       throw err;
     }
   }
