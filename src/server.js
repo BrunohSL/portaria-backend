@@ -23,6 +23,19 @@ conversationRelayWss.on('connection', conversationRelay.handleConnection);
 
 server.on('upgrade', (request, socket, head) => {
   const { pathname } = new URL(request.url, `http://${request.headers.host}`);
+  // DEBUG: toda tentativa de upgrade de WebSocket que CHEGA no Node.
+  //  - Se uma ligação Twilio NÃO gerar esta linha → o WS está sendo barrado
+  //    antes do app (Cloudflare ou Traefik não encaminham o upgrade).
+  //  - Se gerar mas com pathname diferente → mismatch de rota.
+  logger.info({
+    msg: '[upgrade] WebSocket recebido',
+    pathname,
+    host: request.headers.host,
+    upgradeHeader: request.headers.upgrade,
+    connectionHeader: request.headers.connection,
+    forwardedFor: request.headers['x-forwarded-for'],
+    forwardedProto: request.headers['x-forwarded-proto']
+  });
   if (pathname === '/api/twilio/conversation-relay') {
     conversationRelayWss.handleUpgrade(request, socket, head, (ws) => {
       conversationRelayWss.emit('connection', ws, request);
