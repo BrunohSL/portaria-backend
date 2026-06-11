@@ -8,9 +8,9 @@ const INTENT_CLASSIFICATION_SYSTEM = `Você é o classificador de intenção de 
 
 Sua tarefa: identificar o que o visitante quer fazer com base na fala dele.
 
-Responda APENAS com a chave da intenção, sem explicação, sem pontuação extra.
+Responda APENAS com a chave da intenção em minúsculas, sem aspas, sem pontuação e sem explicação.
 
-Caso a fala não se encaixe claramente em nenhuma opção, responda "fallback".
+Caso a fala não se encaixe claramente em nenhuma opção, responda fallback.
 
 Exemplos:
 - "Vim visitar o João" → visita

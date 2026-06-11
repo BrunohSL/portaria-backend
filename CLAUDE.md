@@ -151,7 +151,7 @@ Há **um único** motor de chamada: o **ConversationRelay (WebSocket)**.
 4. **Migrations imutáveis:** nunca edite uma migration já aplicada; crie nova pra fix-forward.
 5. **`COMANDO`/abrir portão é mock** — não há request HTTP real pro DNS do equipamento ainda (`gates.dns` existe mas não é chamado).
 6. **`PUBLIC_BACKEND_URL`** precisa ser uma URL https alcançável pela Twilio (domínio em prod, ngrok em dev) — sem ela os webhooks e o WS não funcionam.
-7. **`__tests__/` está vazio** — scaffolding (unit/, integration/) e scripts existem, mas não há testes escritos.
+7. **Cobertura de testes ainda é mínima** — há testes unitários da classificação de intenção (`src/constants/__tests__/`, `src/integrations/twilio/__tests__/`); o scaffolding em `__tests__/` (unit/, integration/) segue majoritariamente vazio.
 
 ## Deploy
 

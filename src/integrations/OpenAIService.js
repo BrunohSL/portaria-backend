@@ -7,6 +7,7 @@ const {
   FIELD_EXTRACTION_SYSTEM,
   YES_NO_CLASSIFICATION_SYSTEM
 } = require('../constants/prompts');
+const { resolveIntentKey } = require('../constants/intentCatalogs');
 
 class OpenAIService {
   constructor() {
@@ -46,10 +47,13 @@ class OpenAIService {
           { role: 'user', content: transcript }
         ]
       });
-      const raw = (completion.choices?.[0]?.message?.content ?? '').trim().toLowerCase();
-      const validKeys = new Set([...intents.map((i) => i.key), 'fallback']);
-      const key = validKeys.has(raw) ? raw : 'fallback';
-      logger.info({ msg: '[OpenAI] classifyIntent ok', model: this.model, ms: Date.now() - startedAt, key });
+      const content = completion.choices?.[0]?.message?.content ?? '';
+      // Parse tolerante: o modelo pode decorar a resposta (aspas, pontuação,
+      // ecoar o label). resolveIntentKey casa de forma tolerante e devolve o raw
+      // pra log (sem o raw, um fallback por decoração fica indistinguível de um
+      // fallback legítimo).
+      const { key, raw, matched } = resolveIntentKey(content, intents.map((i) => i.key));
+      logger.info({ msg: '[OpenAI] classifyIntent ok', model: this.model, ms: Date.now() - startedAt, key, matched, raw });
       return { key, usage: completion.usage };
     } catch (err) {
       integrationErrors.inc({ integration: 'openai' });

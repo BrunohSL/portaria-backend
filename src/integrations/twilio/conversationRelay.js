@@ -363,6 +363,17 @@ async function processIntentInput(ws, session, node, transcript) {
       pickedKey = key;
       usage = u;
       session.usageLog.push({ kind: 'classifyIntent', usage: u });
+
+      // Rede de segurança: o LLM devolveu fallback, mas o keyword matcher pode
+      // ainda reconhecer a intenção (ex.: "Visita" → visita). Só resgata quando
+      // o keyword acha algo concreto; "bom dia" continua fallback.
+      if (pickedKey === 'fallback') {
+        const rescued = classifyIntentKeyword(transcript, config.catalogKey);
+        if (rescued !== 'fallback') {
+          logger.info({ msg: '[ConversationRelay] keyword resgatou intent marcada fallback pelo LLM', catalog: config.catalogKey, rescued, transcript });
+          pickedKey = rescued;
+        }
+      }
     } catch (err) {
       logger.error({ msg: '[ConversationRelay] LLM falhou em classifyIntent — usando keyword', error: err.message });
       pickedKey = classifyIntentKeyword(transcript, config.catalogKey);
@@ -1083,5 +1094,7 @@ module.exports = {
   finalizeCallSession,
   loadFlowWithGraph,
   loadFlowIntoSession,
-  resolveCondominiumByNumber
+  resolveCondominiumByNumber,
+  // Exposto pra teste unitário:
+  classifyIntentKeyword
 };
